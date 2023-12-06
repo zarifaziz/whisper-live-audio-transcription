@@ -1,5 +1,4 @@
-# Context Bot
-- App name could be "Clarify" ?
+# Whisper Audio Live transcription 
 
 ## Getting started
 
