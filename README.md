@@ -3,7 +3,7 @@
 ## Getting started
 
 ```
-brew install portaudio ffmpeg
+brew install portaudio ffmpeg llvm
 
 poetry install
 ```

@@ -1,82 +1,93 @@
-import speech_recognition as sr
+import sounddevice as sd
+import numpy as np
 import threading
+import queue
+import tempfile
 import os
 from whispercpp import Whisper
-import time
-from pydub import AudioSegment
 
-import queue
+class AudioRecorder:
+    """Class to handle audio recording."""
+    def __init__(self, sample_rate=16000, channels=1):
+        """Initialize the audio recorder with given sample rate and channels."""
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.audio_queue = queue.Queue()
+        self.recording = threading.Event()
 
-audio_queue = queue.Queue()
+    def audio_callback(self, indata, frames, time, status):
+        """Callback function for audio stream."""
+        if self.recording.is_set():
+            self.audio_queue.put(indata.copy())
 
-def initialize_whisper_model():
-    """Initialize and return the Whisper model."""
-    return Whisper('medium')
+    def start(self):
+        """Start the audio recording and streaming."""
+        self.stream = sd.InputStream(callback=self.audio_callback,
+                                     channels=self.channels,
+                                     samplerate=self.sample_rate)
+        self.stream.start()
+        self.recording.set()
 
-def save_audio_to_file(audio_data, filepath):
-    """Save audio data from SpeechRecognition to a file in MP3 format."""
-    audio_segment = AudioSegment(
-        data=audio_data.get_wav_data(),
-        sample_width=audio_data.sample_width,
-        frame_rate=audio_data.sample_rate,
-        channels=1
-    )
-    mp3_path = filepath.replace('.wav', '.mp3')
-    audio_segment.export(mp3_path, format="mp3")
+    def stop(self):
+        """Stop the audio recording and streaming."""
+        self.recording.clear()
+        self.stream.stop()
+        self.stream.close()
 
-def transcribe_with_whisper(filename, model):
-    """Transcribe an audio file using the Whisper model."""
-    result = model.transcribe(filename)
-    return model.extract_text(result)
+class WhisperTranscriber(threading.Thread):
+    """Class to transcribe audio using Whisper."""
+    def __init__(self, audio_queue):
+        """Initialize the transcriber with the audio queue."""
+        super().__init__()
+        self.audio_queue = audio_queue
+        self.model = Whisper('tiny')
+        self.transcribing = threading.Event()
 
-def listen_and_transcribe(recognizer, microphone, model, audio_queue, buffer_time: int = 3):
-    """Continuously capture and transcribe audio."""
-    if not os.path.exists('data'):
-        os.makedirs('data')
+    def run(self):
+        """Run the transcription process."""
+        self.transcribing.set()
+        while self.transcribing.is_set():
+            if not self.audio_queue.empty():
+                audio_chunk = self.audio_queue.get()
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpfile:
+                    self.save_audio_to_file(audio_chunk, tmpfile.name)
+                    transcript = self.transcribe_with_whisper(tmpfile.name)
+                    print(f"Transcription: {transcript}")
+                    os.remove(tmpfile.name)
 
-    with open('data/transcript.txt', 'a', encoding='utf-8') as transcript_file:
-        while not stop_listening:
-            with microphone as source:
-                print("Listening...")
-                audio = recognizer.listen(source, phrase_time_limit=buffer_time)
-                audio_queue.put(audio)
+    def stop(self):
+        """Stop the transcription process."""
+        self.transcribing.clear()
 
-            if not audio_queue.empty():
-                audio_to_process = audio_queue.get()
-                temp_filename = 'data/temp_audio.mp3'
-                save_audio_to_file(audio_to_process, temp_filename)
+    def save_audio_to_file(self, audio_data, filename):
+        """Save audio data to a file."""
+        audio_data = np.concatenate(audio_data)
+        sd.write(filename, audio_data, samplerate=16000)
 
-                # Check if the file exists before proceeding
-                while not os.path.exists(temp_filename):
-                    time.sleep(0.1)
+    def transcribe_with_whisper(self, filename):
+        """Transcribe audio from a file using Whisper."""
+        result = self.model.transcribe(filename)
+        return self.model.extract_text(result)
 
-                transcription = transcribe_with_whisper(temp_filename, model)
-                print(f"Transcription: {transcription}")
+def main():
+    """Main function to start the recorder and transcriber."""
+    recorder = AudioRecorder()
+    audio_queue = recorder.audio_queue
 
-                transcript_file.write(' '.join(transcription) + '\n')
-                transcript_file.flush()
+    transcriber = WhisperTranscriber(audio_queue)
 
-                os.remove(temp_filename)
+    try:
+        recorder.start()
+        transcriber.start()
 
-# Initialize Whisper model
-whisper_model = initialize_whisper_model()
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("Stopping...")
+    finally:
+        recorder.stop()
+        transcriber.stop()
+        transcriber.join()
 
-# Create recognizer and microphone instances
-recognizer = sr.Recognizer()
-microphone = sr.Microphone()
-
-# Flag to control the listening state
-stop_listening = False
-
-# Start transcription in a separate thread
-transcription_thread = threading.Thread(target=listen_and_transcribe, args=(recognizer, microphone, whisper_model, audio_queue))
-transcription_thread.start()
-
-# Main loop to keep the script running
-try:
-    while True:
-        pass
-except KeyboardInterrupt:
-    print("Stopping transcription...")
-    stop_listening = True
-    transcription_thread.join()
+if __name__ == "__main__":
+    main()
