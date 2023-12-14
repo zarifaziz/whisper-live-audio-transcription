@@ -37,7 +37,7 @@ poetry install --no-root
 ### Running the Application
 Execute the following command to run the app:
 ```
-python src/transcribe/main.py
+python -m src.transcribe.main
 ```
 
 ### Code Linting and Formatting

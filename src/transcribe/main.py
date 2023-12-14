@@ -5,6 +5,8 @@ import multiprocessing
 import os
 from loguru import logger
 
+from .settings import settings
+
 
 def record():
     """Record audio from the microphone and save it as a WAV file."""
@@ -22,7 +24,7 @@ def record():
         sd.wait()
 
         # Convert the NumPy array to audio file
-        wv.write("data/recording0.wav", recording, freq, sampwidth=2)
+        wv.write(settings.audio_file, recording, freq, sampwidth=2)
 
 
 def transcribe():
@@ -32,7 +34,7 @@ def transcribe():
     last_transcription = None
 
     while True:
-        audio = whisper.load_audio("data/recording0.wav")
+        audio = whisper.load_audio(settings.audio_file)
         audio = whisper.pad_or_trim(audio)
 
         logger.info("Transcribing audio")
@@ -41,7 +43,7 @@ def transcribe():
         result = whisper.decode(model, mel, options)
         if result.text != "." and result.text != last_transcription:
             logger.info(result.text)
-            with open("data/transcript.txt", "a", encoding="utf-8") as file:
+            with open(settings.transcript_file, "a", encoding="utf-8") as file:
                 file.write(result.text + "\n")
             last_transcription = result.text
 
