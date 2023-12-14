@@ -33,3 +33,8 @@ pip install -r requirements.txt
 ```
 python main.py
 ```
+
+### Linting and formatting
+```
+ruff format . && ruff check .
+```
