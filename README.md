@@ -2,12 +2,34 @@
 
 ## Getting started
 
-```
-brew install portaudio ffmpeg llvm
+This app was tested on Python 3.10.3 so using the same version is recommended.
 
-poetry install
+### Installing external dependencies
+`portaudio`, `ffmpeg`, and `llvm` are needed.
+
+Installing them on Mac
+```
+brew install portaudio ffmpeg
+
+arch -arm64 brew install llvm@14
+export LLVM_CONFIG="/opt/homebrew/Cellar/llvm@14/14.0.6/bin/llvm-config" 
 ```
 
+### Installing python dependencies
+
+Using poetry
 ```
-python main,py
+poetry install --no-root
+```
+
+Using pip
+```
+poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+pip install -r requirements.txt
+```
+
+### Run the app
+```
+python main.py
 ```

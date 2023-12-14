@@ -1,20 +1,20 @@
 [tool.poetry]
 name = "whisper-audio-live-transcription"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Zarif Aziz <zarif@aziz.com>"]
 readme = "README.md"
+include = []
 
 [tool.poetry.dependencies]
 python = "^3.10"
 openai-whisper = {git = "https://github.com/openai/whisper.git"}
-setuptools-rust = "^1.8.1"
 whispercpp = {git = "https://github.com/stlukey/whispercpp.py"}
-speechrecognition = "^3.10.0"
 pyaudio = "^0.2.14"
 pydub = "^0.25.1"
+wavio = "^0.0.8"
 sounddevice = "^0.4.6"
-
+loguru = "^0.7.2"
 
 [build-system]
 requires = ["poetry-core"]
