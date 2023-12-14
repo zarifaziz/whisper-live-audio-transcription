@@ -60,8 +60,6 @@ We welcome contributions from the community! If you'd like to contribute, please
 4. Ensure your code adheres to the style guidelines by running the linting commands.
 5. Submit a pull request with a clear description of your changes.
 
-Please refer to `CONTRIBUTING.md` for more detailed information on contributing to this project.
-
 ## License
 
 This project is licensed under the MIT License - see the `LICENSE` file for details.

@@ -4,6 +4,7 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     """Configuration settings for the transcription application."""
+
     data_dir: Path = Path(__file__).absolute().parent.parent.parent / "data"
     audio_file: str = str(data_dir / "recording0.wav")
     transcript_file: str = str(data_dir / "transcript.txt")
