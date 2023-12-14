@@ -37,7 +37,6 @@ def transcribe():
         audio = whisper.load_audio(settings.audio_file)
         audio = whisper.pad_or_trim(audio)
 
-        logger.info("Transcribing audio")
         mel = whisper.log_mel_spectrogram(audio).to(model.device)
         options = whisper.DecodingOptions(language="en", fp16=False)
         result = whisper.decode(model, mel, options)

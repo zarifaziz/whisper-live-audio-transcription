@@ -1,5 +1,9 @@
 # Whisper Audio Live Transcription 
 
+Welcome to the Whisper Audio Live Transcription tool. This application utilizes the power of the Whisper library to provide real-time transcription of audio captured from your microphone. It's designed to be easy to set up and use, whether you're a developer looking to integrate transcription capabilities into your projects or just someone interested in experimenting with speech recognition technology.
+
+This tool not only writes the live transcription to a file at the path set in `settings.transcript_file` but also prints it to the terminal.
+
 ## Prerequisites
 
 This application has been tested with Python 3.10.3. It is recommended to use 
